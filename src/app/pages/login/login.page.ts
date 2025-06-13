@@ -383,7 +383,8 @@ export class LoginPage {
   }
 
   login() {
-    this.router.navigate(['/tabs/home']);
+    // Navigation vers la page home après connexion
+    this.router.navigate(['/home']);
   }
 
   navigateToRegister(event: Event) {
