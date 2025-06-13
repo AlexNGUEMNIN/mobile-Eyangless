@@ -22,6 +22,11 @@ import {
   IonCardContent,
   IonNote,
   IonFooter,
+  IonAccordionGroup,
+  IonAccordion,
+  IonAvatar,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -39,6 +44,11 @@ import {
   businessOutline,
   chevronDownOutline,
   chevronUpOutline,
+  heartOutline,
+  checkmarkCircle,
+  personOutline,
+  phonePortraitOutline,
+  chatbubblesOutline,
 } from 'ionicons/icons';
 import { FormsModule } from '@angular/forms';
 
@@ -105,25 +115,29 @@ interface CityDetail {
     <ion-header class="ion-no-border">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button defaultHref="/tabs/home"></ion-back-button>
+          <ion-back-button defaultHref="/home" color="primary"></ion-back-button>
         </ion-buttons>
         <ion-title>{{ city?.name }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button>
-            <ion-icon slot="icon-only" name="star-outline"></ion-icon>
+          <ion-button fill="clear" color="primary">
+            <ion-icon slot="icon-only" name="heart-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
     <ion-content>
+      <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+
       <!-- Image principale -->
-      <div class="main-image">
+      <div class="hero-image">
         <ion-img [src]="city?.image" alt="City view"></ion-img>
       </div>
 
       <!-- Segments de navigation -->
-      <ion-segment [(ngModel)]="selectedSegment" class="custom-segment">
+      <ion-segment [(ngModel)]="selectedSegment" class="navigation-segment">
         <ion-segment-button value="description">
           <ion-label>Description</ion-label>
         </ion-segment-button>
@@ -137,142 +151,197 @@ interface CityDetail {
 
       <!-- Contenu Description -->
       <div *ngIf="selectedSegment === 'description'" class="segment-content">
+        <!-- Header avec titre et rating -->
         <div class="city-header">
-          <h1>{{ city?.name }}</h1>
-          <div class="rating">
-            <ion-icon
-              *ngFor="let i of [1, 2, 3, 4, 5]"
-              [name]="getStarIcon(i)"
-            ></ion-icon>
-            <span>{{ city?.rating }}</span>
-            <ion-badge *ngIf="city?.verified" color="success"
-              >Vérifié</ion-badge
-            >
+          <div class="title-section">
+            <h1>{{ city?.name }}</h1>
+            <div class="badges">
+              <ion-badge *ngIf="city?.verified" color="success" class="verified-badge">
+                <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+                Vérifié
+              </ion-badge>
+            </div>
+          </div>
+          <div class="rating-section">
+            <div class="stars">
+              <ion-icon
+                *ngFor="let i of [1, 2, 3, 4, 5]"
+                [name]="getStarIcon(i)"
+                [class.filled]="city && city.rating >= i"
+              ></ion-icon>
+            </div>
+            <span class="rating-number">{{ city?.rating }}</span>
           </div>
         </div>
 
-        <div class="availability-card">
-          <h3>{{ city?.availableRooms }} chambres disponibles</h3>
-          <ion-button expand="block" (click)="reserve()">Réserver</ion-button>
+        <!-- Description -->
+        <div class="description-section">
+          <p>{{ city?.description }}</p>
         </div>
 
-        <div class="section">
-          <h3>Caractéristiques</h3>
-          <ion-list lines="none">
-            <ion-item>
-              <ion-label>Prix de la chambre</ion-label>
-              <ion-note slot="end"
-                >{{ city?.price?.amount }} FCFA/{{
-                  city?.price?.period
-                }}</ion-note
-              >
-            </ion-item>
-            <ion-item>
-              <ion-label>Caution</ion-label>
-              <ion-note slot="end">{{ city?.caution }} FCFA</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-label>Numéro de compte</ion-label>
-              <ion-note slot="end">{{
-                city?.bankDetails?.accountNumber
-              }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-label>Banque</ion-label>
-              <ion-note slot="end">{{ city?.bankDetails?.bank }}</ion-note>
-            </ion-item>
-          </ion-list>
-        </div>
-
-        <div class="section">
-          <h3>Autres Caractéristiques</h3>
-          <ion-list lines="none">
-            <ion-item *ngFor="let item of characteristicsList">
-              <ion-label>{{ item.label }}</ion-label>
-              <ion-note slot="end">{{ item.value }}</ion-note>
-            </ion-item>
-          </ion-list>
-        </div>
-
-        <div class="section">
-          <h3>Suppléments</h3>
-          <div class="amenities">
-            <ion-chip *ngFor="let amenity of city?.amenities">
-              {{ amenity }}
-            </ion-chip>
+        <!-- Disponibilité et réservation -->
+        <div class="availability-alert">
+          <div class="alert-content">
+            <h3>{{ city?.availableRooms }} chambres disponibles</h3>
+            <p>Réservez au plus tôt votre chambre préférée</p>
           </div>
+          <ion-button color="primary" (click)="reserve()">Réserver</ion-button>
         </div>
 
-        <div class="section">
-          <h3>Contacts</h3>
-          <ion-list lines="none">
-            <ion-item>
-              <ion-icon name="person-outline" slot="start"></ion-icon>
-              <ion-label>{{ city?.contact?.name }}</ion-label>
+        <!-- Accordéons -->
+        <ion-accordion-group>
+          <!-- Caractéristiques -->
+          <ion-accordion value="characteristics">
+            <ion-item slot="header" color="light">
+              <ion-label>Caractéristiques</ion-label>
             </ion-item>
-            <ion-item>
-              <ion-icon name="mail-outline" slot="start"></ion-icon>
-              <ion-label>{{ city?.contact?.email }}</ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-icon name="call-outline" slot="start"></ion-icon>
-              <ion-label>{{ city?.contact?.phone }}</ion-label>
-            </ion-item>
-          </ion-list>
-        </div>
+            <div class="ion-padding" slot="content">
+              <div class="pricing-section">
+                <div class="price-item">
+                  <span class="label">Prix de la chambre</span>
+                  <div class="price-value">
+                    <span class="main-price">{{ city?.price?.amount | number }} FCFA</span>
+                    <span class="sub-price">{{ city?.price?.yearlyAmount | number }} FCFA/12 mois</span>
+                  </div>
+                </div>
+                <div class="price-item">
+                  <span class="label">Caution</span>
+                  <div class="price-value">
+                    <span class="caution-price">{{ city?.caution | number }} FCFA</span>
+                    <span class="sub-price">/2 mois</span>
+                  </div>
+                </div>
+                <div class="price-item">
+                  <span class="label">Numéro de compte</span>
+                  <span class="account-number">{{ city?.bankDetails?.accountNumber }}</span>
+                </div>
+                <div class="price-item">
+                  <span class="label">Banque</span>
+                  <span class="bank-name">{{ city?.bankDetails?.bank }}</span>
+                </div>
+              </div>
 
-        <div class="section">
-          <h3>Carte</h3>
-          <div class="map-container">
-            <!-- Intégration de la carte ici -->
-          </div>
-        </div>
+              <div class="characteristics-table">
+                <h4>Autres Caractéristiques</h4>
+                <div class="table-row" *ngFor="let item of characteristicsList">
+                  <span class="table-label">{{ item.label }}</span>
+                  <span class="table-value">{{ item.value }}</span>
+                </div>
+              </div>
+            </div>
+          </ion-accordion>
 
-        <div class="section">
-          <h3>Commentaires ({{ city?.comments?.length }})</h3>
-          <ion-list lines="none">
-            <ion-item *ngFor="let comment of city?.comments">
-              <ion-label>
-                <h3>{{ comment.anonymous ? 'Anonyme' : comment.author }}</h3>
-                <p>{{ comment.text }}</p>
-              </ion-label>
+          <!-- Suppléments -->
+          <ion-accordion value="amenities">
+            <ion-item slot="header" color="light">
+              <ion-label>Suppléments</ion-label>
             </ion-item>
-          </ion-list>
-          <ion-button expand="block" fill="clear">
-            Laisser un commentaire
-          </ion-button>
-        </div>
+            <div class="ion-padding" slot="content">
+              <div class="amenities-grid">
+                <ion-chip 
+                  *ngFor="let amenity of city?.amenities; let i = index" 
+                  [color]="getAmenityColor(i)"
+                  class="amenity-chip"
+                >
+                  {{ amenity }}
+                </ion-chip>
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Contacts -->
+          <ion-accordion value="contacts">
+            <ion-item slot="header" color="light">
+              <ion-label>Contacts</ion-label>
+            </ion-item>
+            <div class="ion-padding" slot="content">
+              <div class="contact-info">
+                <div class="contact-item">
+                  <ion-icon name="person-outline" color="primary"></ion-icon>
+                  <span>{{ city?.contact?.name }}</span>
+                </div>
+                <div class="contact-actions">
+                  <ion-button fill="outline" color="primary" size="small">
+                    <ion-icon name="call-outline" slot="start"></ion-icon>
+                    {{ city?.contact?.phone }}
+                  </ion-button>
+                  <ion-button fill="outline" color="primary" size="small">
+                    <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
+                    Message
+                  </ion-button>
+                </div>
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Carte -->
+          <ion-accordion value="map">
+            <ion-item slot="header" color="light">
+              <ion-label>Carte</ion-label>
+            </ion-item>
+            <div class="ion-padding" slot="content">
+              <div class="map-container">
+                <div class="map-placeholder">
+                  <ion-icon name="location-outline" color="primary"></ion-icon>
+                  <p>{{ city?.location?.address }}</p>
+                </div>
+              </div>
+            </div>
+          </ion-accordion>
+
+          <!-- Commentaires -->
+          <ion-accordion value="comments">
+            <ion-item slot="header" color="light">
+              <ion-label>Commentaires {{ city?.comments?.length | number:'2.0' }}</ion-label>
+            </ion-item>
+            <div class="ion-padding" slot="content">
+              <div class="comments-section">
+                <div class="comment-item" *ngFor="let comment of city?.comments">
+                  <div class="comment-header">
+                    <ion-avatar class="comment-avatar">
+                      <div class="avatar-placeholder">{{ getInitials(comment.author) }}</div>
+                    </ion-avatar>
+                    <span class="comment-author">{{ comment.anonymous ? 'Anonyme' : comment.author }}</span>
+                  </div>
+                  <p class="comment-text">{{ comment.text }}</p>
+                  <button class="more-button">Plus</button>
+                </div>
+                <ion-button expand="block" fill="outline" color="primary" class="add-comment-btn">
+                  Laisser un commentaire
+                </ion-button>
+              </div>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
       </div>
 
       <!-- Contenu Chambres -->
       <div *ngIf="selectedSegment === 'rooms'" class="segment-content">
         <div class="room-details">
           <h3>Détails de la chambre</h3>
-          <ion-list lines="none">
-            <ion-item>
-              <ion-label>Pièces</ion-label>
-              <ion-note slot="end">{{ city?.roomDetails?.rooms }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-label>Dimension</ion-label>
-              <ion-note slot="end">{{ city?.roomDetails?.size }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-label>Meublée</ion-label>
-              <ion-note slot="end">{{
-                city?.roomDetails?.furnished ? 'Oui' : 'Non'
-              }}</ion-note>
-            </ion-item>
-            <ion-item>
-              <ion-label>Toilettes</ion-label>
-              <ion-note slot="end">{{ city?.roomDetails?.bathroom }}</ion-note>
-            </ion-item>
-          </ion-list>
+          <div class="characteristics-table">
+            <div class="table-row">
+              <span class="table-label">Pièces</span>
+              <span class="table-value">{{ city?.roomDetails?.rooms }}</span>
+            </div>
+            <div class="table-row">
+              <span class="table-label">Dimension</span>
+              <span class="table-value">{{ city?.roomDetails?.size }}</span>
+            </div>
+            <div class="table-row">
+              <span class="table-label">Meublée</span>
+              <span class="table-value">{{ city?.roomDetails?.furnished ? 'Oui' : 'Non' }}</span>
+            </div>
+            <div class="table-row">
+              <span class="table-label">Toilettes</span>
+              <span class="table-value">{{ city?.roomDetails?.bathroom }}</span>
+            </div>
+          </div>
 
           <div class="furniture-section">
-            <h3>Meubles</h3>
-            <div class="furniture-chips">
-              <ion-chip *ngFor="let item of city?.roomDetails?.furniture">
+            <h4>Meubles</h4>
+            <div class="amenities-grid">
+              <ion-chip *ngFor="let item of city?.roomDetails?.furniture" color="medium">
                 {{ item }}
               </ion-chip>
             </div>
@@ -283,40 +352,44 @@ interface CityDetail {
       <!-- Contenu Galerie -->
       <div *ngIf="selectedSegment === 'gallery'" class="segment-content">
         <div class="gallery-grid">
-          <!-- Galerie d'images ici -->
+          <div class="gallery-item" *ngFor="let i of [1,2,3,4,5,6]">
+            <ion-img [src]="city?.image" alt="Gallery image"></ion-img>
+          </div>
         </div>
       </div>
-
-      <!-- Bouton de réservation fixe en bas -->
-      <ion-footer class="ion-no-border">
-        <ion-toolbar>
-          <div class="footer-content">
-            <div class="price-info">
-              <span class="price">{{ city?.price?.amount }} FCFA</span>
-              <span class="period">/{{ city?.price?.period }}</span>
-            </div>
-            <ion-button expand="block" (click)="reserve()">
-              Réserver
-            </ion-button>
-          </div>
-        </ion-toolbar>
-      </ion-footer>
     </ion-content>
+
+    <!-- Footer fixe -->
+    <ion-footer class="ion-no-border">
+      <ion-toolbar>
+        <div class="footer-content">
+          <div class="price-summary">
+            <div class="main-price">{{ city?.price?.amount | number }} FCFA/mois</div>
+            <div class="sub-price">{{ city?.price?.yearlyAmount | number }} FCFA/12 mois</div>
+          </div>
+          <ion-button color="success" (click)="reserve()" class="reserve-btn">
+            Réserver
+          </ion-button>
+        </div>
+      </ion-toolbar>
+    </ion-footer>
   `,
   styles: [
     `
       :host {
-        display: block;
+        --primary-color: #00BCD4;
+        --success-color: #4CAF50;
+        --warning-color: #FF9800;
       }
 
       ion-header ion-toolbar {
-        --background: transparent;
-        --border-width: 0;
+        --background: white;
+        --color: var(--primary-color);
       }
 
-      .main-image {
+      .hero-image {
         width: 100%;
-        height: 250px;
+        height: 200px;
         overflow: hidden;
 
         ion-img {
@@ -326,22 +399,18 @@ interface CityDetail {
         }
       }
 
-      .custom-segment {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: white;
+      .navigation-segment {
         --background: white;
+        margin: 0;
         padding: 8px 0;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #e0e0e0;
 
         ion-segment-button {
           --color: #666;
-          --color-checked: #10b981;
-          --indicator-color: #10b981;
+          --color-checked: var(--primary-color);
+          --indicator-color: var(--primary-color);
           text-transform: none;
-          font-size: 14px;
-          min-height: 40px;
+          font-weight: 500;
         }
       }
 
@@ -350,118 +419,333 @@ interface CityDetail {
       }
 
       .city-header {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
 
-        h1 {
-          margin: 0 0 8px;
-          font-size: 24px;
-          font-weight: 600;
-          color: #333;
+        .title-section {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 8px;
+
+          h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+          }
         }
 
-        .rating {
+        .verified-badge {
+          --background: var(--success-color);
+          --color: white;
+          font-size: 12px;
+          
+          ion-icon {
+            font-size: 14px;
+            margin-right: 4px;
+          }
+        }
+
+        .rating-section {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 8px;
 
-          ion-icon {
-            color: #ffd700;
-            font-size: 18px;
+          .stars {
+            display: flex;
+            gap: 2px;
+
+            ion-icon {
+              font-size: 18px;
+              color: #ddd;
+
+              &.filled {
+                color: #FFD700;
+              }
+            }
           }
 
-          span {
-            margin-left: 4px;
-            color: #666;
-          }
-
-          ion-badge {
-            margin-left: 8px;
-            --padding-start: 8px;
-            --padding-end: 8px;
-            --padding-top: 4px;
-            --padding-bottom: 4px;
+          .rating-number {
+            font-weight: 600;
+            color: #333;
           }
         }
       }
 
-      .availability-card {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 24px;
+      .description-section {
+        margin-bottom: 20px;
 
-        h3 {
-          margin: 0 0 16px;
-          color: #10b981;
-          font-weight: 600;
-        }
-
-        ion-button {
-          --background: #10b981;
+        p {
+          color: #666;
+          line-height: 1.5;
           margin: 0;
         }
       }
 
-      .section {
-        margin-bottom: 24px;
+      .availability-alert {
+        background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+        border: 1px solid #FFE69C;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
-        h3 {
-          font-size: 18px;
-          font-weight: 600;
-          color: #333;
-          margin: 0 0 16px;
+        .alert-content {
+          flex: 1;
+
+          h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #856404;
+          }
+
+          p {
+            margin: 0;
+            font-size: 14px;
+            color: #856404;
+          }
+        }
+
+        ion-button {
+          margin-left: 16px;
+          --border-radius: 8px;
         }
       }
 
-      ion-list {
-        background: transparent;
-        padding: 0;
+      ion-accordion-group {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
 
-        ion-item {
-          --padding-start: 0;
-          --inner-padding-end: 0;
-          --background: transparent;
+      .pricing-section {
+        margin-bottom: 24px;
 
-          ion-label {
+        .price-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 12px 0;
+          border-bottom: 1px solid #f0f0f0;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .label {
+            font-weight: 500;
             color: #666;
           }
 
-          ion-note {
+          .price-value {
+            text-align: right;
+
+            .main-price {
+              display: block;
+              font-size: 18px;
+              font-weight: 600;
+              color: var(--success-color);
+            }
+
+            .caution-price {
+              display: block;
+              font-size: 18px;
+              font-weight: 600;
+              color: var(--primary-color);
+            }
+
+            .sub-price {
+              display: block;
+              font-size: 12px;
+              color: #999;
+            }
+          }
+
+          .account-number {
+            font-family: monospace;
+            color: var(--primary-color);
+            font-weight: 600;
+          }
+
+          .bank-name {
+            font-weight: 600;
             color: #333;
-            font-weight: 500;
           }
         }
       }
 
-      .amenities {
+      .characteristics-table {
+        h4 {
+          margin: 0 0 16px 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .table-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-bottom: 1px dotted #ddd;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .table-label {
+            color: #666;
+          }
+
+          .table-value {
+            font-weight: 500;
+            color: #333;
+          }
+        }
+      }
+
+      .amenities-grid {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
 
-        ion-chip {
-          --background: #f0f9f6;
-          --color: #10b981;
+        .amenity-chip {
           font-size: 12px;
+          --border-radius: 16px;
+        }
+      }
+
+      .contact-info {
+        .contact-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 16px;
+
+          ion-icon {
+            font-size: 20px;
+          }
+
+          span {
+            font-weight: 500;
+            color: #333;
+          }
+        }
+
+        .contact-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          ion-button {
+            --border-radius: 8px;
+            flex: 1;
+            min-width: 120px;
+          }
         }
       }
 
       .map-container {
-        height: 200px;
-        background: #f8f9fa;
-        border-radius: 12px;
+        height: 150px;
+        background: #f5f5f5;
+        border-radius: 8px;
         overflow: hidden;
+
+        .map-placeholder {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: #666;
+
+          ion-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+          }
+
+          p {
+            margin: 0;
+            text-align: center;
+          }
+        }
+      }
+
+      .comments-section {
+        .comment-item {
+          margin-bottom: 16px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid #f0f0f0;
+
+          &:last-of-type {
+            border-bottom: none;
+          }
+
+          .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+
+            .comment-avatar {
+              width: 32px;
+              height: 32px;
+
+              .avatar-placeholder {
+                width: 100%;
+                height: 100%;
+                background: var(--primary-color);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 600;
+                border-radius: 50%;
+              }
+            }
+
+            .comment-author {
+              font-weight: 500;
+              color: #333;
+            }
+          }
+
+          .comment-text {
+            margin: 0 0 8px 0;
+            color: #666;
+            line-height: 1.4;
+          }
+
+          .more-button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0;
+          }
+        }
+
+        .add-comment-btn {
+          margin-top: 16px;
+          --border-radius: 8px;
+        }
       }
 
       .room-details {
         .furniture-section {
           margin-top: 24px;
-        }
 
-        .furniture-chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 12px;
+          h4 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+          }
         }
       }
 
@@ -469,11 +753,21 @@ interface CityDetail {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
-        padding: 16px;
+
+        .gallery-item {
+          aspect-ratio: 1;
+          border-radius: 8px;
+          overflow: hidden;
+
+          ion-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
       }
 
       ion-footer {
-        background: white;
         box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 
         .footer-content {
@@ -482,23 +776,43 @@ interface CityDetail {
           justify-content: space-between;
           padding: 12px 16px;
 
-          .price-info {
-            .price {
-              font-size: 20px;
+          .price-summary {
+            .main-price {
+              font-size: 18px;
               font-weight: 600;
-              color: #10b981;
+              color: var(--success-color);
             }
 
-            .period {
-              color: #666;
-              font-size: 14px;
+            .sub-price {
+              font-size: 12px;
+              color: #999;
             }
           }
 
-          ion-button {
-            --background: #10b981;
+          .reserve-btn {
+            --border-radius: 8px;
+            width: 120px;
             margin: 0;
-            width: 140px;
+          }
+        }
+      }
+
+      @media (max-width: 768px) {
+        .contact-actions {
+          flex-direction: column;
+
+          ion-button {
+            flex: none;
+          }
+        }
+
+        .availability-alert {
+          flex-direction: column;
+          text-align: center;
+
+          ion-button {
+            margin: 12px 0 0 0;
+            width: 100%;
           }
         }
       }
@@ -507,7 +821,7 @@ interface CityDetail {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule, // Ajouté pour ngModel
+    FormsModule,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -526,8 +840,13 @@ interface CityDetail {
     IonChip,
     IonCard,
     IonCardContent,
-    IonNote, // Ajouté pour <ion-note>
-    IonFooter, // Ajouté pour <ion-footer>
+    IonNote,
+    IonFooter,
+    IonAccordionGroup,
+    IonAccordion,
+    IonAvatar,
+    IonRefresher,
+    IonRefresherContent,
   ],
 })
 export class CityDetailsPage implements OnInit {
@@ -550,18 +869,26 @@ export class CityDetailsPage implements OnInit {
       businessOutline,
       chevronDownOutline,
       chevronUpOutline,
+      heartOutline,
+      checkmarkCircle,
+      personOutline,
+      phonePortraitOutline,
+      chatbubblesOutline,
     });
   }
 
   ngOnInit() {
+    const cityId = this.route.snapshot.paramMap.get('id');
+    console.log('City ID from route:', cityId);
+    
     // Simuler les données de la cité
     this.city = {
-      id: 1,
+      id: Number(cityId) || 1,
       name: 'Cité Bévina',
       image: 'https://images.pexels.com/photos/466685/pexels-photo-466685.jpeg',
       rating: 4.5,
       verified: true,
-      description: 'Une cité moderne avec portail',
+      description: 'Petite description de la cité avec le mot du bailleur et je ne sais pas trop quoi dire d\'autre.',
       availableRooms: 4,
       price: {
         amount: 55000,
@@ -585,7 +912,7 @@ export class CityDetailsPage implements OnInit {
         security: true,
         guardian: true,
       },
-      amenities: ['Salle de jeux', 'Restaurant', 'Salle des fêtes', 'Boutique'],
+      amenities: ['Salle de jeu', 'Restaurant', 'Salle des fêtes', 'Boutique'],
       contact: {
         name: 'M. Anatole Guérin',
         email: 'anatole@gmail.com',
@@ -622,33 +949,15 @@ export class CityDetailsPage implements OnInit {
   get characteristicsList() {
     return [
       { label: 'Chambres', value: this.city?.characteristics.rooms },
-      {
-        label: 'Taille par chambre',
-        value: this.city?.characteristics.roomSize,
-      },
-      {
-        label: 'Meublée',
-        value: this.city?.characteristics.furnished ? 'Oui' : 'Non',
-      },
+      { label: 'Taille par chambre', value: this.city?.characteristics.roomSize },
+      { label: 'Meublée', value: this.city?.characteristics.furnished ? 'Oui' : 'Non' },
       { label: 'Étages', value: this.city?.characteristics.floors },
       { label: 'Eau', value: this.city?.characteristics.water },
       { label: 'Électricité', value: this.city?.characteristics.electricity },
-      {
-        label: 'Groupe',
-        value: this.city?.characteristics.group ? 'Oui' : 'Non',
-      },
-      {
-        label: 'Forage',
-        value: this.city?.characteristics.parking ? 'Oui' : 'Non',
-      },
-      {
-        label: 'Sécurité',
-        value: this.city?.characteristics.security ? 'Oui' : 'Non',
-      },
-      {
-        label: 'Gardien',
-        value: this.city?.characteristics.guardian ? 'Oui' : 'Non',
-      },
+      { label: 'Groupe', value: this.city?.characteristics.group ? 'Oui' : 'Non' },
+      { label: 'Forage', value: this.city?.characteristics.parking ? 'Oui' : 'Non' },
+      { label: 'Sécurité', value: this.city?.characteristics.security ? 'Oui' : 'Non' },
+      { label: 'Gardien', value: this.city?.characteristics.guardian ? 'Oui' : 'Non' },
     ];
   }
 
@@ -657,7 +966,23 @@ export class CityDetailsPage implements OnInit {
     return this.city.rating >= i ? 'star' : 'star-outline';
   }
 
+  getAmenityColor(index: number): string {
+    const colors = ['medium', 'primary', 'secondary', 'success'];
+    return colors[index % colors.length];
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
+  handleRefresh(event: any) {
+    setTimeout(() => {
+      event.target.complete();
+    }, 2000);
+  }
+
   reserve() {
     console.log('Réservation en cours...');
+    // Logique de réservation
   }
 }
