@@ -865,7 +865,7 @@ export class HomePage implements AfterViewInit, OnInit {
       name: 'Mini cité la Grâce',
       subtitle: 'Une cité verte et blanche',
       image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400',
-      rating: 4.5,
+      rating: 4.15,
       category: '02 Chambres libres',
     },
     {
