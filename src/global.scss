@@ -37,3 +37,73 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 // @import '@ionic/angular/css/palettes/dark.system.css';
 
+
+*{
+  font-family: "Poppins";
+
+}
+
+.bouton{
+  background-color: #07B29E;
+  color: white;
+  border-radius: 200px;
+  padding: 5px 30px;
+}
+
+.rounded{
+  border-radius: 20px;
+}
+
+.badge{
+  background-color: red;
+  color: white;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  text-align: center;
+  border-radius: 200px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+a{
+  color: #07B29E;
+  text-decoration: underline;
+}
+
+
+.flex-row{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+
+.box-gray{
+  border: 1px solid #00000020;
+  padding: 15px;
+  border-radius: 20px;
+}
+
+
+h1, h2, h3, h4, p{
+  margin: 0;
+}
+
+.m-10{
+  margin-bottom: 10px;
+}
+.m-20{
+  margin-bottom: 20px;
+}
+
+
+// Dans src/theme/variables.scss
+:root {
+  --ion-color-primary: #07B29E;
+  --ion-color-primary-rgb: 7, 178, 158;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #069080;
+  --ion-color-primary-tint: #20bba8;
+}

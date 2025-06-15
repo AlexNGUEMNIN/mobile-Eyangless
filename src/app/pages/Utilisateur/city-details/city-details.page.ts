@@ -238,8 +238,8 @@ interface CityDetail {
             </ion-item>
             <div class="ion-padding" slot="content">
               <div class="amenities-grid">
-                <ion-chip 
-                  *ngFor="let amenity of city?.amenities; let i = index" 
+                <ion-chip
+                  *ngFor="let amenity of city?.amenities; let i = index"
                   [color]="getAmenityColor(i)"
                   class="amenity-chip"
                 >
@@ -439,7 +439,7 @@ interface CityDetail {
           --background: var(--success-color);
           --color: white;
           font-size: 12px;
-          
+
           ion-icon {
             font-size: 14px;
             margin-right: 4px;
@@ -880,7 +880,7 @@ export class CityDetailsPage implements OnInit {
   ngOnInit() {
     const cityId = this.route.snapshot.paramMap.get('id');
     console.log('City ID from route:', cityId);
-    
+
     // Simuler les données de la cité
     this.city = {
       id: Number(cityId) || 1,
