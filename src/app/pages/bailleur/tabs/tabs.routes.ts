@@ -9,6 +9,7 @@ export const bailleur_routes : Routes = [
   {
     path: 'accueil',
     loadComponent: () => import('../accueil/accueil.page').then(m => m.AccueilPage)
+    
   },
   {
     path: 'macite',

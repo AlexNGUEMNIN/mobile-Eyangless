@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MenuController } from '@ionic/angular';
 import { register } from 'swiper/element/bundle';
@@ -825,7 +825,7 @@ export class HomePage implements AfterViewInit, OnInit {
     },
   ];
 
-  constructor(private router: Router, private menuController: MenuController) {
+  constructor(private router: Router, private menuController: MenuController, private route: ActivatedRoute) {
     addIcons({
       menuOutline,
       closeOutline,
